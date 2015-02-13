@@ -48,11 +48,12 @@ module FriendlyId
         slug? ? slug_friendly_id : id.to_s
       end
 
-      # Build the new slug using the generated friendly id.
+      # Build the new slug (or switch back to a previous one) using the generated friendly id.
       def build_a_slug
         return unless new_slug_needed?
-        self.slug = slugs.build :name => slug_text.to_s, :scope => friendly_id_config.scope_for(self),
-          :sluggable => self
+        slug_params = {:name => slug_text.to_s, :scope => friendly_id_config.scope_for(self)}
+        self.slug = (persisted? && slugs.where(slug_params.merge(:sluggable_id => id)).first) ||
+                    slugs.build(slug_params.merge(:sluggable => self))
         @new_friendly_id = slug_friendly_id
       end
 
